@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متابعة اليوم الدراسي</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a4f5b">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --ink:#16313a; --teal:#0f6b7a; --teal-d:#0a4f5b; --teal-l:#e2f0f2; --red:#c4303f; --gold:#e2a82e;
+  --paper:#f4f7f7; --line:#cfdadc; --grey:#c9c9c9; --ok:#1f7a4d;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "Segoe UI",Tahoma,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* top bar */
+.top{background:var(--teal-d);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px;position:sticky;top:0;z-index:5}
+.top img{width:40px;height:34px;object-fit:contain;background:#fff;border-radius:50%}
+.top .who{flex:1;line-height:1.25}
+.top .who small{display:block;opacity:.8;font-size:13px}
+.top button{background:transparent;border:1px solid #ffffff80;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
+.tabs{display:flex;gap:4px;padding:8px 12px 0;background:var(--teal-d);overflow-x:auto}
+.tabs button{border:0;background:transparent;color:#cfe6ea;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;font-weight:600}
+.tabs button.on{background:var(--paper);color:var(--teal-d)}
+main{max-width:980px;margin:0 auto;padding:16px}
+
+/* login */
+.login{max-width:380px;margin:8vh auto;padding:24px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:center}
+.login img{width:120px;margin-bottom:6px}
+.login h1{font-size:20px;margin:4px 0 18px}
+.login label{display:block;text-align:right;margin:10px 0 4px;font-weight:600}
+
+/* generic */
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:17px;margin:0 0 12px}
+label.l{display:block;font-weight:600;margin:14px 0 6px}
+input[type=text],input[type=password],input[type=date],input[type=number],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+textarea{min-height:92px;resize:vertical}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:10px;padding:11px 20px;font-weight:700;cursor:pointer}
+.btn:hover{background:var(--teal-d)}
+.btn.sec{background:#fff;color:var(--teal-d);border:1px solid var(--teal)}
+.btn.red{background:var(--red)}
+.btn.sm{padding:6px 12px;font-size:14px;font-weight:600}
+.btn:disabled{opacity:.55;cursor:wait}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1;min-width:140px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;cursor:pointer;font-weight:600}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.muted{color:#5d747b;font-size:14px}
+.empty{padding:18px;text-align:center;color:#5d747b;border:1.5px dashed var(--line);border-radius:10px}
+
+/* date bar */
+.datebar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--teal-l);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+.datebar .dn{font-size:24px;font-weight:800;color:var(--teal-d)}
+.datebar .dn small{font-size:16px;font-weight:600;margin-inline-start:8px}
+.datebar .dd{font-size:20px;font-weight:700;direction:ltr}
+.datebar input{width:auto}
+
+/* entries list */
+.ent{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.ent:last-child{border:0}
+.ent .n{background:var(--teal);color:#fff;border-radius:8px;min-width:34px;text-align:center;font-weight:800;padding:2px 6px}
+.ent .sub{font-weight:700}
+.ent .meta{font-size:14px;color:#5d747b}
+.ent .acts{display:flex;gap:6px}
+
+/* the sheet (looks like the paper form) */
+.sheetwrap{overflow-x:auto;padding-bottom:6px;direction:ltr}
+.sheet{direction:ltr;min-width:640px;background:#fff;color:#000;border:3px double #000;padding:14px 16px 18px;font-family:"Times New Roman",Times,serif}
+.sh-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sh-head .t{font-size:15px;line-height:1.4}
+.sh-head .dayline{margin-top:10px;display:flex;gap:46px;font-family:Arial,sans-serif;font-size:15px}
+.sh-head .dayline b{font-size:19px}
+.sh-head .dayline i{font-size:21px;font-weight:700}
+.sh-logo{width:78px;height:auto}
+.sheet h3{text-align:center;font-weight:400;font-size:19px;margin:6px 0 2px}
+.sheet .sub2{text-align:center;font-size:13px;color:#555;margin-bottom:8px;font-family:Arial,Tahoma,sans-serif}
+.sheet table{width:100%;border-collapse:collapse;border:3px solid #000;table-layout:fixed}
+.sheet th{background:var(--grey);border:1.5px solid #000;font-size:16px;padding:12px 4px;border-bottom:4px solid #000}
+.sheet td{border:1.5px solid #000;text-align:center;font:700 14px Arial,Tahoma,sans-serif;padding:6px;height:54px;word-break:break-word;unicode-bidi:plaintext;white-space:pre-line}
+.sheet td.s{background:var(--grey)}
+.sheet col.c1{width:11%}.sheet col.c2{width:20%}.sheet col.c3{width:34%}.sheet col.c4{width:22%}.sheet col.c5{width:13%}
+
+/* tables for settings */
+.tbl{width:100%;border-collapse:collapse}
+.tbl td,.tbl th{padding:6px 4px;text-align:right;vertical-align:middle}
+.tbl input,.tbl select{padding:7px 8px}
+
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#toast.err{background:var(--red)}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 8px;flex-wrap:wrap}
+.fhead b{font-size:16px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.bar>div{flex:1;min-width:130px}
+@media (max-width:520px){main{padding:10px}.card{padding:12px}.datebar .dn{font-size:20px}}
+@media print{.top,.tabs,.bar,.btn{display:none}}
+
+.login .btn.big{display:block;width:100%;margin:10px 0;padding:16px;font-size:18px}.login .btn.sec:not(.big){margin-top:6px}.login .chips{justify-content:center}
+
+#gal{position:fixed;inset:0;background:var(--paper);z-index:30;overflow:auto}
+.galtop{position:sticky;top:0;background:var(--teal-d);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;gap:8px;flex-wrap:wrap}
+.galbtns{display:flex;gap:8px;flex-wrap:wrap}
+.galbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:14px}
+.galitem{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.galitem img{width:100%;border:1px solid var(--line);display:block}
+.galname{font-size:12px;color:#5d747b;word-break:break-all;margin:6px 0;direction:ltr}
+.galitem a.btn{display:inline-block;text-decoration:none}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script id="seed" type="application/json">null</script>
+<script id="main">
+const LOGO_B64='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';const LOGO=URL.createObjectURL(new Blob([Uint8Array.from(atob(LOGO_B64),c=>c.charCodeAt(0))],{type:'image/jpeg'}));
+/* Local "server" living inside the page: data is kept in the browser (localStorage). Same API shape as the network version. */
+const LOCAL = (() => {
+  const KEY = 'fu_db4';
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  function h53(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  const hash = (pw, salt = uid()) => salt + ':' + h53(salt + pw) + h53(pw + salt, 7);
+  const check = (pw, st) => hash(String(pw), st.split(':')[0]) === st;
+  const E = (status, message) => { const e = new Error(message); e.status = status; return e; };
+  const clean = (s, n = 500) => String(s || '').trim().slice(0, n);
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const key = (e) => `${e.date}|${e.classId}|${e.session}|${e.subjectId}`;
+
+  const seed = () => ({
+    config: {
+      updatedAt: 0,
+      headerLine1: 'East Fayoum Education Administration', headerLine2: 'Middle East School (Arabic/Languages)', title: 'School Day Achievement', sessions: 9,
+      stages: ['ابتدائي', 'إعدادي', 'ثانوي'], tracks: ['عربي', 'لغات'],
+      classes: (() => {
+        const G = [['عربي', 'أولى', ['1/1', '1/2', '1/3']], ['لغات', 'Primary 1', ['1A', '1B', '1C', '1D']],
+          ['عربي', 'ثانية', ['2/1', '2/2', '2/3']], ['لغات', 'Primary 2', ['2A', '2B', '2C']],
+          ['عربي', 'ثالثة', ['3/1', '3/2', '3/3', '3/4']], ['لغات', 'Primary 3', ['3A', '3B', '3C']],
+          ['عربي', 'رابعة', ['4/1', '4/2', '4/3']], ['لغات', 'Primary 4', ['4A', '4B']]];
+        return G.flatMap(([track, grade, names]) => names.map((n) => ({ id: 'p_' + (track === 'عربي' ? 'ar' : 'en') + '_' + n.replace('/', '_'), stage: 'ابتدائي', track, grade, name: n })));
+      })(),
+      subjects: [
+        ['العربي', 'عربي'], ['الرياضيات', 'رياضيات'], ['الإنجليزي', 'إنجليزي'], ['اكتشف', 'اكتشف'], ['علوم', 'علوم'], ['دراسات', 'دراسات'], ['PE', 'PE'], ['تكنولوجيا', 'تكنولوجيا'], ['فرنساوي', 'فرنساوي'],
+      ].map(([name, code], i) => ({ id: 'sa' + i, name, code, track: 'عربي' }))
+        .concat([
+          ['Arabic', 'عربي'], ['Math', 'M'], ['English', 'E'], ['Discover', 'D'], ['Science', 'S'], ['Social Studies', 'SS'], ['PE', 'PE'], ['ICT', 'ICT'], ['French', 'F'], ['German', 'G'],
+        ].map(([name, code], i) => ({ id: 'sl' + i, name, code, track: 'لغات' }))),
+    },
+    users: [{ id: 'u_admin', username: 'admin', name: 'المتحكم', role: 'controller', pass: hash('1234') }],
+    entries: [], deleted: {}, names: [],
+  });
+  const embedded = () => { try { const s = JSON.parse(document.getElementById('seed').textContent); return s && s.config && Array.isArray(s.users) ? s : null; } catch { return null; } };
+  function applyEmbedded(d) { // accounts + settings baked into this very file win if they are newer than what the device has
+    const s = embedded();
+    if (s && (s.config.updatedAt || 0) > (d.config.updatedAt || 0)) { d.config = s.config; d.users = s.users; d.names = [...new Set([...(d.names || []), ...(s.names || [])])]; return true; }
+    return false;
+  }
+  const load = () => {
+    try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.config) { if (applyEmbedded(d)) save(d); return d; } } catch {}
+    const d = seed();
+    try { const old = JSON.parse(localStorage.getItem('fu_db3')); if (old && old.users) { d.users = old.users; d.names = old.names || []; } } catch {} // keep accounts/passwords from the previous version
+    applyEmbedded(d); save(d); return d;
+  };
+  const save = (d) => localStorage.setItem(KEY, JSON.stringify(d));
+  const pub = (u) => ({ id: u.id, username: u.username, name: u.name, role: u.role });
+  const teacherOf = (name) => ({ id: 't_' + name.toLowerCase(), username: '', name, role: 'teacher' });
+  const knownNames = () => { const d = load(); return [...new Set([...(d.names || []), ...d.entries.map((e) => e.teacher)])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ar')); };
+  const isStaff = (u) => u.role === 'controller' || u.role === 'supervisor';
+
+  function handle(path, m, b, token) {
+    b = b || {};
+    const url = new URL(path, 'http://x'), p = url.pathname, db = load();
+    if (p === '/api/login') {
+      const u = db.users.find((x) => x.username === clean(b.username, 50).toLowerCase());
+      if (!u || !check(b.password, u.pass)) throw E(401, 'اسم المستخدم أو كلمة المرور غير صحيحة');
+      if (b.role && b.role !== u.role) throw E(403, u.role === 'controller' ? 'الحساب ده متحكم، ادخلي من زرار «متحكم»' : 'الحساب ده مشرف، ادخلي من زرار «مشرف»');
+      return { token: 'T' + u.id, user: pub(u) };
+    }
+    if (p === '/api/teacher-login') {
+      const name = clean(b.name, 60); if (!name) throw E(400, 'اكتب اسمك');
+      if (!(db.names || []).some((n) => n.toLowerCase() === name.toLowerCase())) { db.names = [...(db.names || []), name]; save(db); }
+      return { token: 'N' + name, user: teacherOf(name) };
+    }
+    const me = token && token[0] === 'N' ? teacherOf(token.slice(1)) : db.users.find((x) => 'T' + x.id === token);
+    if (!me) throw E(401, 'سجّل الدخول من جديد');
+    if (p === '/api/logout') return {};
+    if (p === '/api/names') return { names: knownNames() };
+    if (p === '/api/me') return { user: pub(me), today: today() };
+    if (p === '/api/config' && m === 'GET') return { config: db.config, today: today() };
+    if (p === '/api/config' && m === 'PUT') {
+      if (me.role !== 'controller') throw E(403, 'للمتحكم فقط');
+      const c = b.config || {}, cfg = db.config;
+      ['headerLine1', 'headerLine2', 'title'].forEach((k) => { if (k in c) cfg[k] = clean(c[k], 120); });
+      if (c.sessions) cfg.sessions = Math.min(12, Math.max(1, +c.sessions | 0));
+      if (Array.isArray(c.stages)) cfg.stages = c.stages.map((s) => clean(s, 40)).filter(Boolean);
+      if (Array.isArray(c.classes)) cfg.classes = c.classes.map((x) => ({ id: x.id || uid(), stage: clean(x.stage, 40), track: clean(x.track, 20), grade: clean(x.grade, 40), name: clean(x.name, 40) })).filter((x) => x.name);
+      if (Array.isArray(c.subjects)) cfg.subjects = c.subjects.map((x) => ({ id: x.id || uid(), name: clean(x.name, 40), code: clean(x.code, 12) || clean(x.name, 12), track: clean(x.track, 20) || 'both' })).filter((x) => x.name);
+      cfg.updatedAt = Date.now(); save(db); return { config: cfg };
+    }
+    if (p === '/api/users') {
+      if (m === 'GET' && isStaff(me)) return { users: db.users.map(pub) };
+      if (me.role !== 'controller') throw E(403, 'للمتحكم فقط');
+      if (m === 'POST') {
+        const username = clean(b.username, 50).toLowerCase(), name = clean(b.name, 60);
+        if (!username || !name || !b.password) throw E(400, 'كل الحقول مطلوبة');
+        if (db.users.some((x) => x.username === username)) throw E(400, 'اسم المستخدم موجود');
+        db.users.push({ id: uid(), username, name, role: ['supervisor', 'controller'].includes(b.role) ? b.role : 'supervisor', pass: hash(b.password) });
+        db.config.updatedAt = Date.now(); save(db); return { users: db.users.map(pub) };
+      }
+    }
+    const um = p.match(/^\/api\/users\/([\w-]+)$/);
+    if (um) {
+      if (me.role !== 'controller') throw E(403, 'للمتحكم فقط');
+      const u = db.users.find((x) => x.id === um[1]); if (!u) throw E(404, 'غير موجود');
+      if (m === 'DELETE') { if (u.id === me.id) throw E(400, 'لا يمكن حذف حسابك'); db.users = db.users.filter((x) => x.id !== u.id); }
+      if (m === 'PUT' && b.password) u.pass = hash(b.password);
+      db.config.updatedAt = Date.now(); save(db); return { users: db.users.map(pub) };
+    }
+    if (p === '/api/entries' && m === 'GET') { const date = url.searchParams.get('date') || today(); return { date, entries: db.entries.filter((e) => e.date === date) }; }
+    if (p === '/api/entries' && m === 'POST') {
+      const cfg = db.config;
+      const date = isStaff(me) && /^\d{4}-\d{2}-\d{2}$/.test(b.date || '') ? b.date : today();
+      const cls = cfg.classes.find((x) => x.id === b.classId), sub = cfg.subjects.find((x) => x.id === b.subjectId);
+      const from = +b.from | 0, to = +b.to | 0, achieved = clean(b.achieved), task = clean(b.task);
+      if (!cls || !sub) throw E(400, 'اختار الفصل والمادة');
+      if (from < 1 || to < from || to > cfg.sessions) throw E(400, 'رقم الحصة غير صحيح');
+      if (!achieved) throw E(400, 'اكتب ما تم إنجازه');
+      const owner = isStaff(me) && clean(b.asName, 60) ? teacherOf(clean(b.asName, 60)) : me;
+      const find = (s) => db.entries.find((e) => e.date === date && e.classId === cls.id && e.session === s && e.subjectId === sub.id);
+      for (let s = from; s <= to; s++) { const ex = find(s); if (ex && ex.userId !== owner.id && !isStaff(me)) throw E(409, `الحصة ${s} لنفس المادة مسجلة بالفعل بواسطة ${ex.teacher}`); }
+      for (let s = from; s <= to; s++) {
+        const ex = find(s), rec = { date, classId: cls.id, session: s, subjectId: sub.id, achieved, task, userId: owner.id, teacher: owner.name, ts: Date.now() };
+        if (ex) Object.assign(ex, rec); else db.entries.push({ id: uid(), ...rec });
+        delete db.deleted[key(rec)];
+      }
+      save(db); return { ok: true };
+    }
+    const em = p.match(/^\/api\/entries\/([\w-]+)$/);
+    if (em && m === 'DELETE') {
+      const e = db.entries.find((x) => x.id === em[1]); if (!e) throw E(404, 'غير موجود');
+      if (!isStaff(me) && (e.userId !== me.id || e.date !== today())) throw E(403, 'لا يمكنك حذف تسجيل غيرك');
+      db.entries = db.entries.filter((x) => x.id !== e.id); db.deleted[key(e)] = Date.now(); save(db); return { ok: true };
+    }
+    throw E(404, 'not found');
+  }
+
+  function exportData() { const d = load(); return { app: 'fu', v: 1, exportedAt: new Date().toISOString(), config: d.config, users: d.users, entries: d.entries, deleted: d.deleted, names: knownNames() }; }
+  function importData(o) {
+    if (!o || o.app !== 'fu' || !Array.isArray(o.entries)) throw new Error('الملف ده مش ملف من النظام');
+    const db = load(); let added = 0, updated = 0, conflicts = 0, removed = 0, cfg = false;
+    db.names = [...new Set([...(db.names || []), ...(o.names || [])])];
+    const del = db.deleted;
+    Object.entries(o.deleted || {}).forEach(([k, ts]) => { if (ts > (del[k] || 0)) del[k] = ts; });
+    const idx = new Map(db.entries.map((e) => [key(e), e]));
+    for (const e of o.entries) {
+      const k = key(e), ex = idx.get(k);
+      if ((del[k] || 0) > e.ts) continue;
+      if (!ex) { const n = { ...e, id: e.id || uid() }; db.entries.push(n); idx.set(k, n); added++; }
+      else if (e.ts > ex.ts) { if (ex.userId !== e.userId) conflicts++; Object.assign(ex, { ...e, id: ex.id }); updated++; }
+      else if (e.ts < ex.ts && ex.userId !== e.userId) conflicts++;
+    }
+    db.entries = db.entries.filter((e) => { const gone = (del[key(e)] || 0) > e.ts; if (gone) removed++; return !gone; });
+    if ((o.config && o.config.updatedAt || 0) > (db.config.updatedAt || 0)) { db.config = o.config; db.users = o.users; cfg = true; }
+    save(db); return { added, updated, conflicts, removed, cfg };
+  }
+  return { handle, exportData, importData, today, knownNames, seedData: () => { const d = load(); return { config: d.config, users: d.users, names: d.names || [] }; } };
+})();
+
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const ROLE_AR = { teacher: 'مدرس', supervisor: 'مشرف', controller: 'متحكم' };
+const dow = (d) => new Date(d + 'T12:00:00').getDay();
+const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd} / ${m} / ${y}`; };
+
+const S = {
+  token: sessionStorage.getItem('fu_token'), mode: null, names: [], user: null, config: null, today: '', date: '', entries: [],
+  tab: 'record', users: [], cfgDraft: null,
+  sel: JSON.parse(localStorage.getItem('fu_sel') || '{}'),
+  draft: { achieved: '', task: '' },
+  flt: { stage: '', track: '', all: false },
+  busy: false,
+};
+const saveSel = () => localStorage.setItem('fu_sel', JSON.stringify(S.sel));
+const isStaff = () => S.user && S.user.role !== 'teacher';
+const isCtl = () => S.user && S.user.role === 'controller';
+
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toast.t); toast.t = setTimeout(() => (t.className = ''), 2800);
+}
+async function api(path, method = 'GET', data) {
+  try { return LOCAL.handle(path, method, data, S.token); }
+  catch (e) {
+    if (e.status === 401 && S.token && path !== '/api/login') logout(true);
+    throw new Error(e.message || 'حدث خطأ');
+  }
+}
+
+/* ================= data helpers ================= */
+const cls = (id) => S.config.classes.find((c) => c.id === id);
+const sub = (id) => S.config.subjects.find((s) => s.id === id);
+const TRACK_ORDER = ['عربي', 'لغات'];
+const AR_ORD = [['أولى', 1], ['اولى', 1], ['ثانية', 2], ['ثانيه', 2], ['ثالثة', 3], ['ثالثه', 3], ['رابعة', 4], ['رابعه', 4], ['خامسة', 5], ['خامسه', 5], ['سادسة', 6], ['سادسه', 6]];
+function gradeRank(g) {
+  const m = String(g || '').match(/\d+/); if (m) return +m[0];
+  for (const [k, v] of AR_ORD) if (String(g).includes(k)) return v;
+  return 99;
+}
+function sortedClasses(list) { // stage -> arabic first then languages -> grade 1,2,3.. -> class name
+  const so = (s) => S.config.stages.indexOf(s), ix = (c) => S.config.classes.findIndex((x) => x.id === c.id);
+  return [...list].sort((a, b) => so(a.stage) - so(b.stage) || TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track)
+    || gradeRank(a.grade) - gradeRank(b.grade) || a.name.localeCompare(b.name, 'en', { numeric: true }) || ix(a) - ix(b));
+}
+const uniq = (a) => [...new Set(a)];
+function formModel(classId) {
+  const subIdx = (id) => S.config.subjects.findIndex((s) => s.id === id);
+  const rows = [];
+  for (let n = 1; n <= S.config.sessions; n++) {
+    const es = S.entries.filter((e) => e.classId === classId && e.session === n).sort((a, b) => subIdx(a.subjectId) - subIdx(b.subjectId));
+    rows.push({
+      n,
+      subject: uniq(es.map((e) => (sub(e.subjectId) || {}).code || '?')),
+      achieved: uniq(es.map((e) => e.achieved)),
+      task: uniq(es.map((e) => e.task).filter(Boolean)),
+      sig: uniq(es.map((e) => e.teacher)),
+    });
+  }
+  return rows;
+}
+async function refreshEntries(force) {
+  if (!S.user) return;
+  try {
+    const j = await api('/api/entries?date=' + S.date);
+    const s = JSON.stringify(j.entries);
+    if (force || s !== JSON.stringify(S.entries)) { S.entries = j.entries; paintLive(); }
+  } catch { /* ignore polling errors */ }
+}
+
+/* ================= boot / login ================= */
+async function boot() {
+  if (!S.token) return renderLogin();
+  try {
+    const me = await api('/api/me'); S.user = me.user; S.today = me.today;
+    S.config = (await api('/api/config')).config;
+    S.date = S.date || S.today;
+    if (isStaff()) { S.names = (await api('/api/names')).names; if (isCtl()) S.users = (await api('/api/users')).users; }
+    await refreshEntries(true);
+    renderApp();
+  } catch (e) { if (S.token) { $('#app').innerHTML = `<main><div class="card">${esc(e.message)}<p><button class="btn" data-act="retry">إعادة المحاولة</button></p></div></main>`; } else renderLogin(); }
+}
+function logout(silent) {
+  if (!silent) api('/api/logout').catch(() => {});
+  S.token = null; S.user = null; S.mode = null; sessionStorage.removeItem('fu_token'); renderLogin();
+}
+function renderLogin() {
+  const m = S.mode, head = `<img src="${LOGO}" alt=""><h1>متابعة اليوم الدراسي</h1>`;
+  let body;
+  if (!m) body = `<p class="muted">اختار نوع الدخول</p>
+    <button class="btn big" data-act="mode" data-v="teacher">مدرس</button>
+    <button class="btn sec big" data-act="mode" data-v="supervisor">مشرف</button>
+    <button class="btn sec big" data-act="mode" data-v="controller">متحكم</button>`;
+  else if (m === 'teacher') {
+    const names = LOCAL.knownNames(), last = localStorage.getItem('fu_lastname') || '';
+    body = `<label for="tn">اسمك (هيظهر كتوقيع في النموذج)</label><input id="tn" type="text" value="${esc(last)}" autocomplete="off">
+    ${names.length ? `<p class="muted" style="margin:10px 0 6px;text-align:right">أو اختار اسمك:</p><div class="chips">${names.map((n) => `<button type="button" class="chip" data-act="pickname" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div>` : ''}
+    <p><button class="btn big" data-act="login-teacher">دخول</button></p><button class="btn sec" data-act="mode" data-v="">رجوع</button>`;
+  } else body = `<h2 style="font-size:17px">دخول ${m === 'controller' ? 'المتحكم' : 'المشرف'}</h2>
+    <label for="u">اسم المستخدم</label><input id="u" type="text" autocomplete="username" autocapitalize="none" dir="ltr">
+    <label for="p">كلمة المرور</label><input id="p" type="password" autocomplete="current-password" dir="ltr">
+    <p><button class="btn big" data-act="login">دخول</button></p><button class="btn sec" data-act="mode" data-v="">رجوع</button>`;
+  const foot = !m ? `<p class="muted" style="margin-top:18px">جهاز جديد؟ <label style="color:var(--teal-d);font-weight:700;cursor:pointer;text-decoration:underline">استوردي ملف البيانات<input id="imp0" type="file" accept=".json,application/json" multiple hidden></label></p>` : '';
+  $('#app').innerHTML = `<div class="login">${head}${body}${foot}</div>`;
+  const on = (id, fn) => { const el = $(id); if (el) { el.addEventListener('keydown', (e) => e.key === 'Enter' && fn()); el.focus(); } };
+  on('#p', doLogin); on('#tn', doTeacherLogin);
+}
+async function doLogin() {
+  try {
+    const j = await api('/api/login', 'POST', { username: $('#u').value, password: $('#p').value, role: S.mode });
+    S.token = j.token; sessionStorage.setItem('fu_token', j.token); S.date = ''; S.tab = 'record'; await boot();
+  } catch (e) { toast(e.message, true); }
+}
+async function doTeacherLogin() {
+  try {
+    const j = await api('/api/teacher-login', 'POST', { name: $('#tn').value });
+    localStorage.setItem('fu_lastname', j.user.name);
+    S.token = j.token; sessionStorage.setItem('fu_token', j.token); S.date = ''; S.tab = 'record'; await boot();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ================= shell ================= */
+function renderApp() {
+  const tabs = [['record', 'تسجيل المتابعة']];
+  if (isStaff()) tabs.push(['forms', isCtl() ? 'النماذج والتصدير' : 'نماذج اليوم']);
+  if (isCtl()) tabs.push(['users', 'المستخدمين'], ['settings', 'الإعدادات']);
+  tabs.push(['sync', 'المزامنة والنسخ']);
+  if (!tabs.some((t) => t[0] === S.tab)) S.tab = 'record';
+  $('#app').innerHTML = `<div class="top"><img src="${LOGO}" alt=""><div class="who"><b>${esc(S.user.name)}</b><small>${ROLE_AR[S.user.role]}</small></div><button data-act="logout">خروج</button></div>
+  <div class="tabs">${tabs.map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('')}</div>
+  <main id="view"></main>`;
+  renderView();
+}
+function renderView() {
+  const v = $('#view'); if (!v) return;
+  if (S.tab === 'record') v.innerHTML = recordHTML();
+  else if (S.tab === 'forms') v.innerHTML = formsHTML();
+  else if (S.tab === 'users') v.innerHTML = usersHTML();
+  else if (S.tab === 'sync') v.innerHTML = syncHTML();
+  else if (S.tab === 'settings') { if (!S.cfgDraft) S.cfgDraft = JSON.parse(JSON.stringify(S.config)); v.innerHTML = settingsHTML(); }
+  paintLive();
+}
+function paintLive() {
+  const el = $('#live'); if (!el) return;
+  el.innerHTML = S.tab === 'record' ? liveRecordHTML() : S.tab === 'forms' ? liveFormsHTML() : '';
+}
+
+/* ================= sheet (HTML preview of the paper form) ================= */
+function sheetHTML(c) {
+  const cfg = S.config, d = S.date, rows = formModel(c.id);
+  const cell = (a) => esc(a.join('\n'));
+  return `<div class="sheetwrap"><div class="sheet"><div class="sh-head"><div class="t"><div>${esc(cfg.headerLine1)}</div><div>${esc(cfg.headerLine2)}</div>
+  <div class="dayline"><span>Day: <i>${DAYS_EN[dow(d)]}</i></span><span>Date: <b>${fmtDate(d)}</b></span></div></div><img class="sh-logo" src="${LOGO}" alt=""></div>
+  <h3>${esc(cfg.title)} (<b>${esc(c.name)}</b>)</h3><div class="sub2">${esc(c.stage)} - ${esc(c.track)}${c.grade ? ' - ' + esc(c.grade) : ''}</div>
+  <table><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>
+  <tr><th>Session</th><th>Subject</th><th>What was Achieved</th><th>Task</th><th>Signature</th></tr>
+  ${rows.map((r) => `<tr><td class="s">${r.n}</td><td>${cell(r.subject)}</td><td>${cell(r.achieved)}</td><td>${cell(r.task)}</td><td>${cell(r.sig)}</td></tr>`).join('')}
+  </table></div></div>`;
+}
+
+/* ================= record tab ================= */
+function chips(key, opts, cur) {
+  return `<div class="chips">${opts.map((o) => `<button type="button" class="chip ${cur === o.v ? 'on' : ''}" data-act="chip" data-k="${key}" data-v="${esc(o.v)}">${esc(o.l)}</button>`).join('')}</div>`;
+}
+function recordHTML() {
+  const c = S.config, sel = S.sel;
+  const stages = c.stages;
+  if (!stages.includes(sel.stage)) sel.stage = stages.length === 1 ? stages[0] : '';
+  const tracks = ['عربي', 'لغات'];
+  if (!tracks.includes(sel.track)) sel.track = tracks.length === 1 ? tracks[0] : '';
+  const inTrack = sortedClasses(c.classes.filter((x) => x.stage === sel.stage && x.track === sel.track));
+  const grades = uniq(inTrack.map((x) => x.grade || ''));
+  if (!grades.includes(sel.grade)) sel.grade = grades.length === 1 ? grades[0] : '';
+  const classes = inTrack.filter((x) => (x.grade || '') === sel.grade);
+  if (!classes.some((x) => x.id === sel.classId)) sel.classId = classes.length === 1 ? classes[0].id : '';
+  const subs = c.subjects.filter((s) => s.track === 'both' || s.track === sel.track);
+  if (!subs.some((s) => s.id === sel.subjectId)) sel.subjectId = '';
+  sel.from = Math.min(+sel.from || 1, c.sessions); sel.to = Math.max(Math.min(+sel.to || sel.from, c.sessions), sel.from);
+  const nums = Array.from({ length: c.sessions }, (_, i) => i + 1);
+  const opt = (v, cur) => `<option value="${v}" ${+cur === v ? 'selected' : ''}>${v}</option>`;
+  const d = S.date;
+  return `<div class="datebar"><div class="dn">${DAYS_EN[dow(d)]}<small>${DAYS_AR[dow(d)]}</small></div><div class="dd">${fmtDate(d)}</div>
+  ${isStaff() ? `<input type="date" id="dateSel" value="${d}" aria-label="التاريخ">` : ''}</div>
+  <div class="card"><h2>سجّل متابعة حصتك</h2>
+  <label class="l">المرحلة</label>${chips('stage', stages.map((s) => ({ v: s, l: s })), sel.stage)}
+  ${sel.stage ? `<label class="l">القسم</label>${chips('track', tracks.map((s) => ({ v: s, l: s })), sel.track)}` : ''}
+  ${sel.track && !grades.length ? '<div class="empty">لسه مفيش فصول للقسم ده، المتحكم يضيفها من الإعدادات</div>' : ''}
+  ${sel.track && grades.some((g) => g) ? `<label class="l">الصف</label>${chips('grade', grades.map((g) => ({ v: g, l: g || '-' })), sel.grade)}` : ''}
+  ${sel.track && grades.includes(sel.grade) ? `<label class="l">الفصل</label>${chips('classId', classes.map((x) => ({ v: x.id, l: x.name })), sel.classId)}` : ''}
+  ${sel.classId ? `<label class="l">المادة</label>${chips('subjectId', subs.map((s) => ({ v: s.id, l: s.name })), sel.subjectId)}
+  ${/french|german|فرنساوي|ألماني|الماني/i.test((sub(sel.subjectId) || {}).name || '') ? '<p class="muted">💡 الفرنساوي والألماني بيتسجلوا في نفس الحصة ولنفس الفصل عادي، كل مدرس يسجل مادته.</p>' : ''}
+  <div class="row"><div><label class="l" for="from">من حصة رقم</label><select id="from" data-act="sess" data-k="from">${nums.map((n) => opt(n, sel.from)).join('')}</select></div>
+  <div><label class="l" for="to">إلى حصة رقم <span class="muted">(لو الحصة ثنائية)</span></label><select id="to" data-act="sess" data-k="to">${nums.filter((n) => n >= sel.from).map((n) => opt(n, sel.to)).join('')}</select></div></div>
+  <label class="l" for="ach">ما تم إنجازه (What was Achieved)</label><textarea id="ach" data-act="draft" data-k="achieved">${esc(S.draft.achieved)}</textarea>
+  <label class="l" for="task">الواجب (Task)</label><input type="text" id="task" data-act="draft" data-k="task" value="${esc(S.draft.task)}">
+  ${isStaff() ? `<label class="l" for="as">التوقيع باسم</label><select id="as" data-act="as"><option value="">${esc(S.user.name)} (أنا)</option>${S.names.map((n) => `<option value="${esc(n)}" ${sel.asName === n ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>` : `<p class="muted">التوقيع: <b>${esc(S.user.name)}</b> (تلقائي)</p>`}
+  <p><button class="btn" data-act="save">حفظ</button></p>` : ''}</div>
+  <div id="live"></div>`;
+}
+function canEdit(e) { return isStaff() || (e.userId === S.user.id && e.date === S.today); }
+function liveRecordHTML() {
+  const id = S.sel.classId; if (!id) return '';
+  const c = cls(id); if (!c) return '';
+  const list = S.entries.filter((e) => e.classId === id).sort((a, b) => a.session - b.session);
+  return `<div class="card"><h2>المسجّل النهاردة لفصل ${esc(c.name)} (${esc(c.track)})</h2>
+  ${list.length ? list.map((e) => `<div class="ent"><span class="n">${e.session}</span><div><div class="sub">${esc((sub(e.subjectId) || {}).name)} - ${esc(e.achieved)}</div><div class="meta">الواجب: ${esc(e.task || '-')} | ${esc(e.teacher)}</div></div>
+  <div class="acts">${canEdit(e) ? `<button class="btn sec sm" data-act="edit" data-v="${e.id}">تعديل</button><button class="btn red sm" data-act="del" data-v="${e.id}">حذف</button>` : ''}</div></div>`).join('') : '<div class="empty">لسه مفيش حاجة اتسجلت للفصل ده</div>'}</div>
+  <div class="card"><h2>شكل النموذج</h2>${sheetHTML(c)}</div>`;
+}
+async function saveEntry() {
+  const s = S.sel, d = S.draft;
+  if (!s.classId || !s.subjectId) return toast('اختار الفصل والمادة', true);
+  if (!d.achieved.trim()) return toast('اكتب ما تم إنجازه', true);
+  try {
+    await api('/api/entries', 'POST', { date: S.date, classId: s.classId, subjectId: s.subjectId, from: s.from, to: s.to, achieved: d.achieved, task: d.task, asName: s.asName || undefined });
+    toast('تم الحفظ ✓'); d.achieved = ''; d.task = ''; saveSel();
+    await refreshEntries(true); renderView(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ================= forms tab (supervisor / controller) ================= */
+function filteredClasses() {
+  const cl = S.config.classes.filter((c) => (!S.flt.stage || c.stage === S.flt.stage) && (!S.flt.track || c.track === S.flt.track)
+    && (S.flt.all || S.entries.some((e) => e.classId === c.id)));
+  return sortedClasses(cl);
+}
+function formsHTML() {
+  const c = S.config;
+  return `<div class="card"><div class="bar">
+  <div><label class="l" for="dateSel">التاريخ</label><input type="date" id="dateSel" value="${S.date}"></div>
+  <div><label class="l" for="fs">المرحلة</label><select id="fs" data-act="flt" data-k="stage"><option value="">الكل</option>${c.stages.map((s) => `<option ${S.flt.stage === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+  <div><label class="l" for="ft">القسم</label><select id="ft" data-act="flt" data-k="track"><option value="">الكل</option>${uniq(c.classes.map((x) => x.track)).map((s) => `<option ${S.flt.track === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+  <div><label class="l"><input type="checkbox" data-act="flt" data-k="all" ${S.flt.all ? 'checked' : ''}> اعرض الفصول اللي مفيهاش تسجيل</label></div></div>
+  ${isCtl() ? `<p style="margin:16px 0 0" class="row"><button class="btn" id="bpdf" data-act="export-pdf">تحميل الكل PDF</button><button class="btn sec" id="bimg" data-act="export-img">تحميل الكل صور (JPG)</button></p>` : ''}
+  </div><div id="live"></div>`;
+}
+function liveFormsHTML() {
+  const list = filteredClasses();
+  if (!list.length) return '<div class="empty">مفيش نماذج للتاريخ والفلتر ده</div>';
+  return `<p class="muted">عدد النماذج: ${list.length}</p>` + list.map((c) => `<div class="card"><div class="fhead"><b>${esc(c.stage)} - ${esc(c.track)}${c.grade ? ' - ' + esc(c.grade) : ''} - ${esc(c.name)}</b>
+  ${isCtl() ? `<button class="btn sec sm" data-act="png" data-v="${c.id}">حفظ كصورة</button>` : ''}</div>${sheetHTML(c)}</div>`).join('');
+}
+
+/* ================= canvas drawing (for PDF / PNG) ================= */
+const logoImg = new Image(); const logoReady = new Promise((r) => { logoImg.onload = r; logoImg.onerror = r; }); logoImg.src = LOGO;
+const hasAr = (t) => /[\u0600-\u06FF]/.test(t);
+function wrap(ctx, text, maxW) {
+  const out = [];
+  String(text).split('\n').forEach((par) => {
+    let cur = '';
+    par.split(/\s+/).filter(Boolean).forEach((w) => {
+      const t = cur ? cur + ' ' + w : w;
+      if (!cur || ctx.measureText(t).width <= maxW) cur = t; else { out.push(cur); cur = w; }
+    });
+    if (cur) out.push(cur);
+  });
+  return out;
+}
+function cellText(ctx, items, x, y, w, h, maxF) {
+  if (!items.length) return;
+  const fam = 'Arial, Tahoma, sans-serif'; let size = maxF, lines;
+  for (; size >= 8; size--) {
+    ctx.font = `bold ${size}px ${fam}`;
+    lines = items.flatMap((it, i) => wrap(ctx, it, w - 14).map((l, j) => ({ l, gap: i > 0 && j === 0 ? size * 0.35 : 0 })));
+    const tot = lines.reduce((a, b) => a + size * 1.3 + b.gap, 0);
+    if (tot <= h - 8) break;
+  }
+  const tot = lines.reduce((a, b) => a + size * 1.3 + b.gap, 0);
+  let cy = y + (h - tot) / 2;
+  ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  lines.forEach((o) => { cy += o.gap; ctx.direction = hasAr(o.l) ? 'rtl' : 'ltr'; ctx.fillText(o.l, x + w / 2, cy + size * 0.65); cy += size * 1.3; });
+  ctx.direction = 'ltr';
+}
+async function drawForm(c) {
+  await logoReady;
+  const cfg = S.config, d = S.date, K = 2, rows = formModel(c.id);
+  const cv = document.createElement('canvas'); cv.width = 794 * K; cv.height = 1123 * K;
+  const x = cv.getContext('2d'); x.scale(K, K);
+  x.fillStyle = '#fff'; x.fillRect(0, 0, 794, 1123);
+  // ornamental border
+  x.strokeStyle = '#000'; x.lineWidth = 2; x.strokeRect(34, 34, 726, 1056); x.strokeRect(50, 50, 694, 1024);
+  x.lineWidth = 1.2;
+  const ring = (cx, cy) => { x.beginPath(); x.arc(cx, cy, 4.2, 0, 7); x.stroke(); };
+  for (let i = 42 + 8; i < 752; i += 13) { ring(i, 42); ring(i, 1082); }
+  for (let j = 42 + 8; j < 1082; j += 13) { ring(42, j); ring(752, j); }
+  x.textBaseline = 'alphabetic'; x.textAlign = 'left'; x.direction = 'ltr'; x.fillStyle = '#000';
+  x.font = '17px "Times New Roman", serif'; x.fillText(cfg.headerLine1, 76, 72); x.fillText(cfg.headerLine2, 76, 94);
+  x.font = 'bold 18px Arial'; x.fillText('Day:', 143, 122);
+  x.font = 'italic bold 24px Arial'; x.fillText(DAYS_EN[dow(d)], 190, 123);
+  x.font = 'bold 18px Arial'; x.fillText('Date:', 408, 122);
+  x.font = 'bold 22px "Times New Roman", serif'; x.fillText(fmtDate(d), 470, 123);
+  x.drawImage(logoImg, 615, 54, 116, 100);
+  x.textAlign = 'center'; x.font = '22px "Times New Roman", serif';
+  x.fillText(`${cfg.title} (${c.name})`, 397, 151);
+  x.font = '13px Arial'; x.fillStyle = '#555';
+  x.direction = 'rtl'; x.fillText(`${c.stage} - ${c.track}${c.grade ? ' - ' + c.grade : ''}`, 397, 169); x.direction = 'ltr'; x.fillStyle = '#000';
+  // table
+  const X0 = 55, cw = [75, 135, 232, 150, 87], top = 177, hh = 70, bottom = 975, rh = (bottom - top - hh) / rows.length;
+  const xs = [X0]; cw.forEach((w) => xs.push(xs[xs.length - 1] + w));
+  x.fillStyle = '#c9c9c9'; x.fillRect(X0, top, xs[5] - X0, hh); x.fillRect(X0, top + hh, cw[0], bottom - top - hh);
+  x.strokeStyle = '#000'; x.lineWidth = 1.5;
+  for (let i = 1; i < 5; i++) { x.beginPath(); x.moveTo(xs[i], top); x.lineTo(xs[i], bottom); x.stroke(); }
+  for (let r = 1; r < rows.length; r++) { const yy = top + hh + r * rh; x.beginPath(); x.moveTo(X0, yy); x.lineTo(xs[5], yy); x.stroke(); }
+  x.lineWidth = 4; x.beginPath(); x.moveTo(X0, top + hh); x.lineTo(xs[5], top + hh); x.stroke();
+  x.lineWidth = 3.5; x.strokeRect(X0, top, xs[5] - X0, bottom - top);
+  x.fillStyle = '#000'; x.textBaseline = 'middle'; x.textAlign = 'center';
+  ['Session', 'Subject', 'What was Achieved', 'Task', 'Signature'].forEach((t, i) => {
+    x.font = (i === 0 || i === 4 ? 'bold 15px' : 'bold 19px') + ' "Times New Roman", serif'; x.fillText(t, xs[i] + cw[i] / 2, top + hh / 2);
+  });
+  rows.forEach((r, i) => {
+    const y = top + hh + i * rh;
+    x.font = 'bold 18px "Times New Roman", serif'; x.fillStyle = '#000'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(r.n), xs[0] + cw[0] / 2, y + rh / 2);
+    cellText(x, r.subject, xs[1], y, cw[1], rh, 17);
+    cellText(x, r.achieved, xs[2], y, cw[2], rh, 16);
+    cellText(x, r.task, xs[3], y, cw[3], rh, 15);
+    cellText(x, r.sig, xs[4], y, cw[4], rh, 14);
+  });
+  return cv;
+}
+const toBytes = async (cv, type, q) => new Uint8Array(await (await new Promise((r) => cv.toBlob(r, type, q))).arrayBuffer());
+
+function makePDF(jpegs, W, H) {
+  const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+  const push = (b) => { if (typeof b === 'string') b = enc.encode(b); parts.push(b); len += b.length; };
+  const obj = (id, fn) => { offs[id] = len; push(`${id} 0 obj\n`); fn(); push('\nendobj\n'); };
+  const n = jpegs.length;
+  push('%PDF-1.4\n');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push(`<< /Type /Pages /Kids [${jpegs.map((_, i) => `${3 + 3 * i} 0 R`).join(' ')}] /Count ${n} >>`));
+  jpegs.forEach((j, i) => {
+    const p = 3 + 3 * i, cs = 'q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';
+    obj(p, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`));
+    obj(p + 1, () => push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+    obj(p + 2, () => { push(`<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.length} >>\nstream\n`); push(j); push('\nendstream'); });
+  });
+  const total = 3 * n + 3, xref = len;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let i = 1; i < total; i++) push(String(offs[i]).padStart(10, '0') + ' 00000 n \n');
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+const safe = (s) => String(s).replace(/[\\/:*?"<>|\s]+/g, '_');
+const touch = () => matchMedia('(pointer:coarse)').matches;
+const imgName = (c, i) => `${i ? String(i).padStart(2, '0') + '_' : ''}${[c.stage, c.track, c.grade, c.name].filter(Boolean).map(safe).join('_')}_${S.date}.jpg`;
+async function toFile(c, i) {
+  const cv = await drawForm(c);
+  const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.93));
+  return new File([blob], imgName(c, i), { type: 'image/jpeg' });
+}
+const canShareFiles = (files) => !!(navigator.canShare && navigator.canShare({ files }));
+async function downloadAll(files) { for (const f of files) { download(f, f.name); await new Promise((r) => setTimeout(r, 700)); } }
+function closeGallery() { const g = $('#gal'); if (g) g.remove(); if (S.gal) S.gal.urls.forEach((u) => URL.revokeObjectURL(u)); S.gal = null; }
+function showGallery(files) {
+  closeGallery();
+  const urls = files.map((f) => URL.createObjectURL(f));
+  const d = document.createElement('div'); d.id = 'gal';
+  d.innerHTML = `<div class="galtop"><b>${files.length} صورة جاهزة</b><span class="galbtns">${files.length > 1 ? '<button class="btn sm" data-act="gal-all">حفظ الكل</button>' : ''}${canShareFiles(files) ? '<button class="btn sm" data-act="gal-share">مشاركة / حفظ في المعرض</button>' : ''}<button class="btn sec sm" data-act="gal-close">إغلاق</button></span></div>
+  <p class="muted" style="padding:10px 14px 0">دوسي «حفظ الصورة» تحت كل نموذج. وكمان تقدري تضغطي على الصورة مطولًا وتختاري حفظ الصورة.${files.length > 1 ? ' (زرار «حفظ الكل» ممكن المتصفح يمنعه، ساعتها احفظي كل صورة لوحدها.)' : ''}</p>
+  <div class="galbody">${files.map((f, i) => `<div class="galitem"><img src="${urls[i]}" alt=""><div class="galname">${esc(f.name)}</div><a class="btn sm" href="${urls[i]}" download="${esc(f.name)}">حفظ الصورة</a></div>`).join('')}</div>`;
+  document.body.appendChild(d); S.gal = { files, urls };
+}
+async function exportAll(kind) {
+  const list = filteredClasses();
+  if (!list.length) return toast('مفيش نماذج للتصدير', true);
+  const btn = $(kind === 'pdf' ? '#bpdf' : '#bimg'); const old = btn.textContent;
+  document.querySelectorAll('#view .btn').forEach((b) => (b.disabled = true)); btn.textContent = 'جاري التجهيز...';
+  try {
+    await refreshEntries(true);
+    if (kind === 'pdf') {
+      const jp = []; for (const c of list) jp.push(await toBytes(await drawForm(c), 'image/jpeg', 0.92));
+      download(makePDF(jp, 794 * 2, 1123 * 2), `forms-${S.date}.pdf`); toast('تم التحميل ✓');
+    } else {
+      const files = []; let i = 1; for (const c of list) files.push(await toFile(c, i++));
+      showGallery(files);
+    }
+  } catch (e) { toast('حصل خطأ في التصدير: ' + e.message, true); }
+  document.querySelectorAll('#view .btn').forEach((b) => (b.disabled = false)); btn.textContent = old;
+}
+async function exportOne(id) {
+  const c = cls(id); if (!c) return;
+  showGallery([await toFile(c)]);
+}
+
+/* ================= sync tab ================= */
+function buildUpdatedFile() {
+  const seed = JSON.stringify(LOCAL.seedData()).replace(/</g, '\\u003c');
+  const html = '<!doctype html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>متابعة اليوم الدراسي</title>\n<style>\n'
+    + document.querySelector('style').textContent + '\n</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast"></div>\n<script id="seed" type="application/json">' + seed + '<\/script>\n<script id="main">\n'
+    + document.getElementById('main').textContent + '\n<\/script>\n</body>\n</html>';
+  return new Blob([html], { type: 'text/html' });
+}
+function syncHTML() {
+  const n = JSON.parse(localStorage.getItem('fu_db4') || '{}').entries?.length || 0;
+  return `<div class="card"><h2>تجميع بيانات أكتر من جهاز</h2>
+  <p>البيانات محفوظة على الجهاز ده فقط (عدد التسجيلات: <b>${n}</b>). لو المدرسين بيسجلوا من أجهزة مختلفة:</p>
+  <p><b>١)</b> كل مدرس في آخر اليوم يدوس <b>تصدير</b> ويبعت الملف للمتحكم (واتساب مثلًا).<br><b>٢)</b> المتحكم يدوس <b>استيراد</b> ويختار الملفات واحد ورا التاني، وهتتدمج من غير ما حاجة تتمسح.</p>
+  <div class="row"><button class="btn" data-act="sync-export">تصدير بياناتي (ملف)</button>
+  <label class="btn sec" style="text-align:center;cursor:pointer">استيراد ودمج ملف<input id="imp" type="file" accept=".json,application/json" multiple hidden></label></div></div>
+  ${isCtl() && location.protocol === 'file:' ? `<div class="card"><h2>نسخة النظام بالحسابات والإعدادات (للتوزيع على كل الأجهزة)</h2>
+  <p>بعد ما تضيفي مشرفين أو متحكمين أو تعدّلي الفصول والمواد، دوسي الزرار ده. هيطلع لك <b>نسخة جديدة من ملف النظام</b> الحسابات والإعدادات جواها. ابعتيها للأجهزة التانية وافتحيها هناك، وأي حساب أضفتيه هيشتغل من أول مرة.</p>
+  <p class="muted">وبديل: في صفحة الدخول على الجهاز الجديد فيه «استوردي ملف البيانات»، وده بياخد نفس الحسابات والإعدادات من ملف التصدير.</p>
+  <p><button class="btn" data-act="build-file">تحميل نسخة النظام المحدّثة</button></p></div>` : ''}
+  <div class="card"><h2>نصيحة</h2><p class="muted">اعملي تصدير في آخر كل يوم كنسخة احتياطية. ولو مسحتي بيانات المتصفح هتضيع البيانات اللي ماتصدرتش.</p></div>`;
+}
+
+/* ================= users tab ================= */
+function usersHTML() {
+  return `<div class="card"><h2>إضافة مشرف أو متحكم</h2><p class="muted">المدرسين مش محتاجين حساب، بيدخلوا باسمهم بس.</p><div class="row">
+  <div><label class="l" for="nn">الاسم </label><input type="text" id="nn"></div>
+  <div><label class="l" for="nu">اسم الدخول</label><input type="text" id="nu" dir="ltr" autocapitalize="none"></div>
+  <div><label class="l" for="np">كلمة المرور</label><input type="text" id="np" dir="ltr"></div>
+  <div><label class="l" for="nr">الصلاحية</label><select id="nr"><option value="supervisor">مشرف</option><option value="controller">متحكم</option></select></div></div>
+  <p><button class="btn" data-act="user-add">إضافة</button></p></div>
+  <div class="card"><h2>المستخدمين (${S.users.length})</h2><table class="tbl">${S.users.map((u) => `<tr><td><b>${esc(u.name)}</b><br><span class="muted" dir="ltr">${esc(u.username)}</span></td><td>${ROLE_AR[u.role]}</td>
+  <td style="text-align:left"><button class="btn sec sm" data-act="user-pass" data-v="${u.id}">تغيير كلمة المرور</button> ${u.id !== S.user.id ? `<button class="btn red sm" data-act="user-del" data-v="${u.id}">حذف</button>` : ''}</td></tr>`).join('')}</table></div>`;
+}
+
+/* ================= settings tab ================= */
+function settingsHTML() {
+  const c = S.cfgDraft, tr = ['عربي', 'لغات'];
+  const sel = (path, val, opts) => `<select data-act="cfg" data-p="${path}">${opts.map((o) => `<option value="${esc(o.v)}" ${o.v === val ? 'selected' : ''}>${esc(o.l)}</option>`).join('')}</select>`;
+  const inp = (path, val, ph) => `<input type="text" data-act="cfg" data-p="${path}" value="${esc(val)}" placeholder="${ph || ''}">`;
+  return `<div class="card"><h2>بيانات النموذج</h2>
+  <label class="l">السطر الأول</label>${inp('headerLine1', c.headerLine1)}<label class="l">السطر التاني</label>${inp('headerLine2', c.headerLine2)}
+  <div class="row"><div><label class="l">عنوان النموذج</label>${inp('title', c.title)}</div><div><label class="l">عدد الحصص في اليوم</label><input type="number" min="1" max="12" data-act="cfg" data-p="sessions" value="${c.sessions}"></div></div></div>
+  <div class="card"><h2>المراحل</h2><p class="muted">كل مرحلة في سطر</p><textarea data-act="cfg-stages">${esc(c.stages.join('\n'))}</textarea></div>
+  <div class="card"><h2>إضافة فصول بسرعة</h2><p class="muted">اختاري المرحلة والقسم واكتبي اسم الصف وأسماء الفصول بينها فاصلة. مثال: الصف «Primary 1» والفصول «1A,1B,1C,1D».</p>
+  <div class="row"><div><label class="l" for="qa_stage">المرحلة</label><select id="qa_stage">${c.stages.map((s) => `<option>${esc(s)}</option>`).join('')}</select></div>
+  <div><label class="l" for="qa_track">القسم</label><select id="qa_track">${tr.map((s) => `<option>${s}</option>`).join('')}</select></div>
+  <div><label class="l" for="qa_grade">الصف</label><input type="text" id="qa_grade" placeholder="مثلا أولى أو Primary 2"></div></div>
+  <label class="l" for="qa_names">أسماء الفصول</label><input type="text" id="qa_names" placeholder="1/1, 1/2, 1/3">
+  <p><button class="btn sec sm" data-act="quick-add">إضافة</button></p></div>
+  <div class="card"><h2>الفصول (${c.classes.length})</h2><div style="overflow-x:auto"><table class="tbl">${c.classes.map((x, i) => `<tr><td>${sel(`classes.${i}.stage`, x.stage, c.stages.map((s) => ({ v: s, l: s })))}</td><td>${sel(`classes.${i}.track`, x.track, tr.map((s) => ({ v: s, l: s })))}</td><td>${inp(`classes.${i}.grade`, x.grade || '', 'الصف')}</td><td>${inp(`classes.${i}.name`, x.name, 'اسم الفصل')}</td><td><button class="btn red sm" data-act="cfg-del" data-v="classes.${i}">حذف</button></td></tr>`).join('')}</table></div>
+  <p><button class="btn sec sm" data-act="cfg-add" data-v="classes">+ إضافة فصل</button></p></div>
+  <div class="card"><h2>المواد</h2><p class="muted">الرمز هو اللي بيظهر في خانة Subject في النموذج (مثلا E أو M أو عربي)</p><table class="tbl">${c.subjects.map((x, i) => `<tr><td>${inp(`subjects.${i}.name`, x.name, 'اسم المادة')}</td><td>${inp(`subjects.${i}.code`, x.code, 'الرمز')}</td><td>${sel(`subjects.${i}.track`, x.track, [{ v: 'both', l: 'عربي ولغات' }, { v: 'عربي', l: 'عربي فقط' }, { v: 'لغات', l: 'لغات فقط' }])}</td><td><button class="btn red sm" data-act="cfg-del" data-v="subjects.${i}">حذف</button></td></tr>`).join('')}</table>
+  <p><button class="btn sec sm" data-act="cfg-add" data-v="subjects">+ إضافة مادة</button></p></div>
+  <p><button class="btn" data-act="cfg-save">حفظ الإعدادات</button></p>`;
+}
+function setPath(obj, path, val) { const k = path.split('.'); let o = obj; while (k.length > 1) o = o[k.shift()]; o[k[0]] = val; }
+
+/* ================= events ================= */
+document.addEventListener('click', async (ev) => {
+  const t = ev.target.closest('[data-act]'); if (!t) return;
+  const act = t.dataset.act, v = t.dataset.v;
+  if (act === 'login') return doLogin();
+  if (act === 'login-teacher') return doTeacherLogin();
+  if (act === 'mode') { S.mode = v || null; return renderLogin(); }
+  if (act === 'pickname') { $('#tn').value = v; return doTeacherLogin(); }
+  if (act === 'retry') return boot();
+  if (act === 'logout') return logout();
+  if (act === 'tab') { S.tab = v; if (v === 'settings') S.cfgDraft = null; return renderApp(); }
+  if (act === 'chip') {
+    const k = t.dataset.k; S.sel[k] = v;
+    if (k === 'stage') { S.sel.track = ''; S.sel.grade = ''; S.sel.classId = ''; S.sel.subjectId = ''; }
+    if (k === 'track') { S.sel.grade = ''; S.sel.classId = ''; S.sel.subjectId = ''; }
+    if (k === 'grade') { S.sel.classId = ''; S.sel.subjectId = ''; }
+    saveSel(); return renderView();
+  }
+  if (act === 'save') return saveEntry();
+  if (act === 'edit') {
+    const e = S.entries.find((x) => x.id === v); if (!e) return;
+    Object.assign(S.sel, { subjectId: e.subjectId, from: e.session, to: e.session }); S.draft = { achieved: e.achieved, task: e.task };
+    renderView(); return window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (act === 'del') {
+    if (!confirm('تحذف التسجيل ده؟')) return;
+    try { await api('/api/entries/' + v, 'DELETE'); await refreshEntries(true); toast('تم الحذف'); } catch (e) { toast(e.message, true); } return;
+  }
+  if (act === 'sync-export') {
+    const f = new File([JSON.stringify(LOCAL.exportData())], `followup-${S.today}-${safe(S.user.name)}.json`, { type: 'application/json' });
+    if (touch() && canShareFiles([f])) { try { await navigator.share({ files: [f] }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    download(f, f.name); return toast('تم تحميل الملف ✓');
+  }
+  if (act === 'build-file') { download(buildUpdatedFile(), 'school-followup.html'); return toast('تم تحميل النسخة ✓'); }
+  if (act === 'export-pdf') return exportAll('pdf');
+  if (act === 'export-img') return exportAll('img');
+  if (act === 'gal-close') return closeGallery();
+  if (act === 'gal-all') return downloadAll(S.gal.files);
+  if (act === 'gal-share') { try { await navigator.share({ files: S.gal.files }); } catch (e) { if (e.name !== 'AbortError') toast('المشاركة مش متاحة هنا، احفظي كل صورة لوحدها', true); } return; }
+  if (act === 'png') return exportOne(v);
+  if (act === 'user-add') {
+    try { S.users = (await api('/api/users', 'POST', { name: $('#nn').value, username: $('#nu').value, password: $('#np').value, role: $('#nr').value })).users; toast('تمت الإضافة ✓'); renderView(); } catch (e) { toast(e.message, true); } return;
+  }
+  if (act === 'user-del') {
+    if (!confirm('تحذف المستخدم ده؟ (تسجيلاته القديمة هتفضل موجودة)')) return;
+    try { S.users = (await api('/api/users/' + v, 'DELETE')).users; renderView(); } catch (e) { toast(e.message, true); } return;
+  }
+  if (act === 'user-pass') {
+    const p = prompt('كلمة المرور الجديدة:'); if (!p) return;
+    try { await api('/api/users/' + v, 'PUT', { password: p }); toast('تم تغيير كلمة المرور ✓'); } catch (e) { toast(e.message, true); } return;
+  }
+  if (act === 'quick-add') {
+    const names = $('#qa_names').value.split(/[,،\n]+/).map((s) => s.trim()).filter(Boolean);
+    if (!names.length) return toast('اكتبي أسماء الفصول', true);
+    names.forEach((n) => S.cfgDraft.classes.push({ id: '', stage: $('#qa_stage').value, track: $('#qa_track').value, grade: $('#qa_grade').value.trim(), name: n }));
+    toast(`اتضاف ${names.length} فصل، متنسيش تدوسي «حفظ الإعدادات»`); return renderView();
+  }
+  if (act === 'cfg-add') {
+    const d = S.cfgDraft;
+    if (v === 'classes') d.classes.push({ id: '', stage: d.stages[0] || '', track: 'لغات', grade: '', name: '' });
+    else d.subjects.push({ id: '', name: '', code: '', track: 'both' });
+    return renderView();
+  }
+  if (act === 'cfg-del') { const [k, i] = v.split('.'); S.cfgDraft[k].splice(+i, 1); return renderView(); }
+  if (act === 'cfg-save') {
+    try {
+      const j = await api('/api/config', 'PUT', { config: S.cfgDraft }); S.config = j.config; S.cfgDraft = JSON.parse(JSON.stringify(S.config));
+      toast('تم حفظ الإعدادات ✓'); renderView();
+    } catch (e) { toast(e.message, true); } return;
+  }
+});
+document.addEventListener('input', (ev) => {
+  const t = ev.target.closest('[data-act]'); if (!t) return;
+  if (t.dataset.act === 'draft') S.draft[t.dataset.k] = t.value;
+  if (t.dataset.act === 'cfg') setPath(S.cfgDraft, t.dataset.p, t.type === 'number' ? +t.value : t.value);
+  if (t.dataset.act === 'cfg-stages') S.cfgDraft.stages = t.value.split('\n').map((s) => s.trim()).filter(Boolean);
+});
+document.addEventListener('change', async (ev) => {
+  const t = ev.target;
+  if (t.id === 'imp0') {
+    try { let n = 0; for (const f of t.files) { LOCAL.importData(JSON.parse(await f.text())); n++; } toast(`تم استيراد ${n} ملف ✓ دلوقتي ادخلي بحسابك`); renderLogin(); } catch (e) { toast(e.message, true); }
+    return;
+  }
+  if (t.id === 'imp') {
+    let tot = { added: 0, updated: 0, conflicts: 0, removed: 0, cfg: false };
+    try {
+      for (const f of t.files) { const r = LOCAL.importData(JSON.parse(await f.text())); ['added', 'updated', 'conflicts', 'removed'].forEach((k) => (tot[k] += r[k])); tot.cfg = tot.cfg || r.cfg; }
+      toast(`تم الدمج ✓ جديد: ${tot.added} | محدّث: ${tot.updated}${tot.conflicts ? ' | تعارض اتحل بالأحدث: ' + tot.conflicts : ''}${tot.cfg ? ' | اتحدثت الإعدادات' : ''}`);
+      await boot();
+    } catch (e) { toast(e.message, true); }
+    return;
+  }
+  if (t.id === 'dateSel') { if (t.value) { S.date = t.value; await refreshEntries(true); renderView(); } return; }
+  const a = t.dataset && t.dataset.act; if (!a) return;
+  if (a === 'sess') { S.sel[t.dataset.k] = +t.value; if (t.dataset.k === 'from' && S.sel.to < S.sel.from) S.sel.to = S.sel.from; saveSel(); renderView(); }
+  if (a === 'as') { S.sel.asName = t.value; saveSel(); }
+  if (a === 'flt') { S.flt[t.dataset.k] = t.type === 'checkbox' ? t.checked : t.value; paintLive(); }
+  if (a === 'cfg') { if (t.dataset.p.includes('.stage') || t.dataset.p === 'sessions') renderView(); }
+  if (a === 'cfg-stages') renderView();
+});
+
+setInterval(() => { if (S.user && document.visibilityState === 'visible' && (S.tab === 'record' || S.tab === 'forms')) refreshEntries(); }, 5000);
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+window.addEventListener('storage', () => refreshEntries());
+boot();
+})();
+
+</script>
+</body>
+</html>
